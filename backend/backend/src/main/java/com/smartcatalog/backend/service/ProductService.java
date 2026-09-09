@@ -52,4 +52,19 @@ public class ProductService {
         productRepository.deleteById(id);
         return true;
     }
+    public List<Product> searchByName(String name) {
+        return productRepository.findByProductNameContainingIgnoreCase(name);
+    }
+
+    public List<Product> searchByCategory(String category) {
+        return productRepository.findByCategoryContainingIgnoreCase(category);
+    }
+
+    public List<Product> searchByMaterial(String material) {
+        return productRepository.findByMaterialContainingIgnoreCase(material);
+    }
+
+    public List<Product> searchByType(String type) {
+        return productRepository.findByTypeContainingIgnoreCase(type);
+    }
 }

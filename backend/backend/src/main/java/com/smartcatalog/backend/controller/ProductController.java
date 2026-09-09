@@ -79,4 +79,29 @@ public class ProductController {
 
         return ResponseEntity.ok("Product deleted successfully");
     }
+    @GetMapping("/search")
+    public List<Product> searchProducts(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String material,
+            @RequestParam(required = false) String type) {
+
+        if (name != null) {
+            return productService.searchByName(name);
+        }
+
+        if (category != null) {
+            return productService.searchByCategory(category);
+        }
+
+        if (material != null) {
+            return productService.searchByMaterial(material);
+        }
+
+        if (type != null) {
+            return productService.searchByType(type);
+        }
+
+        return productService.getAllProducts();
+    }    
 }

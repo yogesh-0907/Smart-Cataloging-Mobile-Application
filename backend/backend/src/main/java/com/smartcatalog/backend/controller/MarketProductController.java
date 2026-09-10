@@ -30,7 +30,7 @@ public class MarketProductController {
 
     @PostMapping
     public ResponseEntity<MarketProduct> createMarketProduct(
-            @RequestBody MarketProduct marketProduct,
+            @RequestBody @jakarta.validation.Valid MarketProduct marketProduct,
             @RequestParam Long marketId,
             @RequestParam Long productId) {
 

@@ -4,35 +4,34 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 public class MarketProduct {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long marketProductId;
+    private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "market_id")
     private Market market;
 
     @ManyToOne
-    @JoinColumn(name = "product_id")
     private Product product;
 
+    @NotBlank
     private String status;
 
     public MarketProduct() {
     }
 
-    public Long getMarketProductId() {
-        return marketProductId;
+    public Long getId() {
+        return id;
     }
 
-    public void setMarketProductId(Long marketProductId) {
-        this.marketProductId = marketProductId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Market getMarket() {

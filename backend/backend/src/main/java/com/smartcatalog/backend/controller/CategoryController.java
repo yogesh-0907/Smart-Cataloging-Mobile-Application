@@ -18,7 +18,7 @@ public class CategoryController {
     }
 
     @PostMapping
-    public Category createCategory(@RequestBody Category category) {
+    public Category createCategory(@RequestBody @jakarta.validation.Valid Category category) {
         return categoryService.createCategory(category);
     }
 
@@ -42,7 +42,7 @@ public class CategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<Category> updateCategory(
             @PathVariable Long id,
-            @RequestBody Category category) {
+            @RequestBody @jakarta.validation.Valid Category category) {
 
         Category updatedCategory = categoryService.updateCategory(id, category);
 

@@ -16,15 +16,16 @@ public class OrderController {
     private final OrderService orderService;
     private final ProductRepository productRepository;
 
-    public OrderController(OrderService orderService,
-                           ProductRepository productRepository) {
+    public OrderController(
+            OrderService orderService,
+            ProductRepository productRepository) {
         this.orderService = orderService;
         this.productRepository = productRepository;
     }
 
     @PostMapping
     public ResponseEntity<Order> createOrder(
-            @RequestBody Order order,
+            @RequestBody @jakarta.validation.Valid Order order,
             @RequestParam Long productId) {
 
         Product product = productRepository.findById(productId).orElse(null);
@@ -35,7 +36,9 @@ public class OrderController {
 
         order.setProduct(product);
 
-        return ResponseEntity.ok(orderService.createOrder(order));
+        return ResponseEntity.ok(
+                orderService.createOrder(order)
+        );
     }
 
     @GetMapping
@@ -58,7 +61,7 @@ public class OrderController {
     @PutMapping("/{id}")
     public ResponseEntity<Order> updateOrder(
             @PathVariable Long id,
-            @RequestBody Order order) {
+            @RequestBody @jakarta.validation.Valid Order order) {
 
         Order updatedOrder = orderService.updateOrder(id, order);
 

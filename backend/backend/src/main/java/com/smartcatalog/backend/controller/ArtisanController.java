@@ -18,7 +18,7 @@ public class ArtisanController {
     }
 
     @PostMapping
-    public Artisan createArtisan(@RequestBody Artisan artisan) {
+    public Artisan createArtisan(@RequestBody @jakarta.validation.Valid Artisan artisan) {
         return artisanService.createArtisan(artisan);
     }
 
@@ -42,7 +42,7 @@ public class ArtisanController {
     @PutMapping("/{id}")
     public ResponseEntity<Artisan> updateArtisan(
             @PathVariable Long id,
-            @RequestBody Artisan artisan) {
+            @RequestBody @jakarta.validation.Valid Artisan artisan) {
 
         Artisan updatedArtisan = artisanService.updateArtisan(id, artisan);
 

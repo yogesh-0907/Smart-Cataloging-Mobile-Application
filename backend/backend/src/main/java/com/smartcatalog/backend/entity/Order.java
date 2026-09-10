@@ -6,6 +6,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 @Table(name = "orders")
@@ -18,7 +20,10 @@ public class Order {
     @ManyToOne
     private Product product;
 
+    @Min(1)
     private int quantity;
+
+    @NotBlank
     private String status;
 
     public Order() {

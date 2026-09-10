@@ -18,7 +18,7 @@ public class MarketController {
     }
 
     @PostMapping
-    public Market createMarket(@RequestBody Market market) {
+    public Market createMarket(@RequestBody @jakarta.validation.Valid Market market) {
         return marketService.createMarket(market);
     }
 
@@ -42,7 +42,7 @@ public class MarketController {
     @PutMapping("/{id}")
     public ResponseEntity<Market> updateMarket(
             @PathVariable Long id,
-            @RequestBody Market market) {
+            @RequestBody @jakarta.validation.Valid Market market) {
 
         Market updatedMarket = marketService.updateMarket(id, market);
 

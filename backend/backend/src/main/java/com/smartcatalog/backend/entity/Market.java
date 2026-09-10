@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
 
 @Entity
 public class Market {
@@ -12,9 +13,16 @@ public class Market {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long marketId;
 
+    @NotBlank
     private String name;
+
+    @NotBlank
     private String location;
+
+    @NotBlank
     private String contact;
+
+    @NotBlank
     private String type;
 
     public Market() {

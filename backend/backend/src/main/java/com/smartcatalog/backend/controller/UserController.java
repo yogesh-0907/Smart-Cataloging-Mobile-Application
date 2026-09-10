@@ -18,7 +18,7 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
+    public User createUser(@RequestBody @jakarta.validation.Valid User user) {
         return userService.createUser(user);
     }
 
@@ -41,7 +41,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(
             @PathVariable Long id,
-            @RequestBody User user) {
+            @RequestBody @jakarta.validation.Valid User user) {
 
         User updatedUser = userService.updateUser(id, user);
 

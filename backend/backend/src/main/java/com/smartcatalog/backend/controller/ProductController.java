@@ -23,7 +23,7 @@ public class ProductController {
 
     @PostMapping
     public ResponseEntity<Product> createProduct(
-            @RequestBody Product product,
+            @RequestBody @jakarta.validation.Valid Product product,
             @RequestParam Long artisanId) {
 
         Artisan artisan = artisanRepository.findById(artisanId).orElse(null);
@@ -57,7 +57,7 @@ public class ProductController {
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(
             @PathVariable Long id,
-            @RequestBody Product product) {
+            @RequestBody @jakarta.validation.Valid Product product) {
 
         Product updatedProduct = productService.updateProduct(id, product);
 

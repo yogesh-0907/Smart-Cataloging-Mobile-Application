@@ -4,9 +4,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-
 import jakarta.persistence.OneToMany;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
 import java.util.List;
+
 @Entity
 public class Artisan {
 
@@ -14,15 +17,24 @@ public class Artisan {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long artisanId;
 
+    @NotBlank
     private String name;
+
+    @NotBlank
     private String location;
+
+    @NotBlank
     private String contact;
+
+    @Min(1)
     private int age;
+
+    @NotBlank
     private String experience;
 
     @OneToMany(mappedBy = "artisan")
     private List<Product> products;
-    
+
     public Artisan() {
     }
 

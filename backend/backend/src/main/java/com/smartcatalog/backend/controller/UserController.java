@@ -1,20 +1,25 @@
 package com.smartcatalog.backend.controller;
 
 import com.smartcatalog.backend.entity.User;
+import com.smartcatalog.backend.security.JwtService;
 import com.smartcatalog.backend.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
+    private final JwtService jwtService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, JwtService jwtService) {
         this.userService = userService;
+        this.jwtService = jwtService;
     }
 
     @PostMapping
@@ -29,6 +34,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
+
         User user = userService.getUserById(id);
 
         if (user == null) {
@@ -65,7 +71,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<User> login(
+    public ResponseEntity<Map<String, Object>> login(
             @RequestParam String mobileNumber,
             @RequestParam String password) {
 
@@ -75,6 +81,20 @@ public class UserController {
             return ResponseEntity.status(401).build();
         }
 
-        return ResponseEntity.ok(user);
+        String token = jwtService.generateToken(
+                user.getUserId(),
+                user.getMobileNumber(),
+                user.getRole()
+        );
+
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("token", token);
+        response.put("userId", user.getUserId());
+        response.put("name", user.getName());
+        response.put("mobileNumber", user.getMobileNumber());
+        response.put("role", user.getRole());
+
+        return ResponseEntity.ok(response);
     }
 }

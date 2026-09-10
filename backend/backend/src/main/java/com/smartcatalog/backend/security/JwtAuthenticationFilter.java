@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,29 +30,35 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain)
             throws ServletException, IOException {
 
-        String authorizationHeader =
-                request.getHeader("Authorization");
+        String authorizationHeader = request.getHeader("Authorization");
+
+        System.out.println("JWT HEADER: " + authorizationHeader);
 
         if (authorizationHeader != null &&
                 authorizationHeader.startsWith("Bearer ")) {
 
-            String token =
-                    authorizationHeader.substring(7);
+            String token = authorizationHeader.substring(7);
 
-            if (jwtService.isTokenValid(token)) {
+            try {
+                String userId = jwtService.extractUserId(token);
 
-                String userId =
-                        jwtService.extractUserId(token);
+                System.out.println("JWT VALID - USER ID: " + userId);
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(
                                 userId,
                                 null,
-                                List.of(new SimpleGrantedAuthority("ROLE_USER"))
+                                List.of(
+                                        new SimpleGrantedAuthority("ROLE_USER")
+                                )
                         );
 
                 SecurityContextHolder.getContext()
                         .setAuthentication(authentication);
+
+            } catch (Exception e) {
+                System.out.println("JWT ERROR: " + e.getMessage());
+                SecurityContextHolder.clearContext();
             }
         }
 

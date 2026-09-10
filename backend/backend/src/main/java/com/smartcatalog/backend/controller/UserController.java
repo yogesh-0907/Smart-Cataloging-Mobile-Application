@@ -63,4 +63,18 @@ public class UserController {
 
         return ResponseEntity.ok("User deleted successfully");
     }
+
+    @PostMapping("/login")
+    public ResponseEntity<User> login(
+            @RequestParam String mobileNumber,
+            @RequestParam String password) {
+
+        User user = userService.login(mobileNumber, password);
+
+        if (user == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return ResponseEntity.ok(user);
+    }
 }

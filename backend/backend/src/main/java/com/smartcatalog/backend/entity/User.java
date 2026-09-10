@@ -5,7 +5,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 @Entity
@@ -20,8 +19,7 @@ public class User {
     private String name;
 
     @NotBlank
-    @Email
-    private String email;
+    private String mobileNumber;
 
     @NotBlank
     private String password;
@@ -29,7 +27,8 @@ public class User {
     @NotBlank
     private String role;
 
-    public User() {}
+    public User() {
+    }
 
     public Long getUserId() {
         return userId;
@@ -47,12 +46,12 @@ public class User {
         this.name = name;
     }
 
-    public String getEmail() {
-        return email;
+    public String getMobileNumber() {
+        return mobileNumber;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setMobileNumber(String mobileNumber) {
+        this.mobileNumber = mobileNumber;
     }
 
     public String getPassword() {

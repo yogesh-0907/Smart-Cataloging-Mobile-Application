@@ -35,7 +35,7 @@ public class UserService {
         }
 
         existingUser.setName(user.getName());
-        existingUser.setEmail(user.getEmail());
+        existingUser.setMobileNumber(user.getMobileNumber());
         existingUser.setPassword(user.getPassword());
         existingUser.setRole(user.getRole());
 
@@ -49,5 +49,19 @@ public class UserService {
 
         userRepository.deleteById(id);
         return true;
+    }
+
+    public User login(String mobileNumber, String password) {
+        User user = userRepository.findByMobileNumber(mobileNumber).orElse(null);
+
+        if (user == null) {
+            return null;
+        }
+
+        if (!user.getPassword().equals(password)) {
+            return null;
+        }
+
+        return user;
     }
 }

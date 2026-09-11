@@ -37,7 +37,8 @@ public class SecurityConfig {
                     "/api/ai/analyze-image",
                     "/api/ai/speech-to-text",
                     "/api/ai/estimate-price",
-                    "/api/ai/extract-features"
+                    "/api/ai/extract-features",
+                    "/api/ai/analyze-product"
                 ).permitAll()
 
                 .anyRequest().authenticated()

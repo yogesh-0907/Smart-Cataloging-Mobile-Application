@@ -23,17 +23,34 @@ public class UserController {
     }
 
     @PostMapping
-    public User createUser(@RequestBody @jakarta.validation.Valid User user) {
-        return userService.createUser(user);
+    public ResponseEntity<Map<String, Object>> createUser(
+            @RequestBody @jakarta.validation.Valid User user) {
+
+        User createdUser = userService.createUser(user);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("userId", createdUser.getUserId());
+        response.put("name", createdUser.getName());
+        response.put("mobileNumber", createdUser.getMobileNumber());
+        response.put("role", createdUser.getRole());
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<Map<String, Object>>> getAllUsers() {
+
+        List<Map<String, Object>> response = userService.getAllUsers()
+                .stream()
+                .map(this::safeUserResponse)
+                .toList();
+
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getUserById(
+            @PathVariable Long id) {
 
         User user = userService.getUserById(id);
 
@@ -41,11 +58,11 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(safeUserResponse(user));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(
+    public ResponseEntity<Map<String, Object>> updateUser(
             @PathVariable Long id,
             @RequestBody @jakarta.validation.Valid User user) {
 
@@ -55,7 +72,7 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(updatedUser);
+        return ResponseEntity.ok(safeUserResponse(updatedUser));
     }
 
     @DeleteMapping("/{id}")
@@ -96,5 +113,17 @@ public class UserController {
         response.put("role", user.getRole());
 
         return ResponseEntity.ok(response);
+    }
+
+    private Map<String, Object> safeUserResponse(User user) {
+
+        Map<String, Object> response = new HashMap<>();
+
+        response.put("userId", user.getUserId());
+        response.put("name", user.getName());
+        response.put("mobileNumber", user.getMobileNumber());
+        response.put("role", user.getRole());
+
+        return response;
     }
 }

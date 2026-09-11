@@ -33,12 +33,15 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/api/users",
-                    "/api/users/login",
+                    "/api/users/**",
+                    "/api/artisans",
+                    "/api/artisans/**",
                     "/api/ai/analyze-image",
                     "/api/ai/speech-to-text",
                     "/api/ai/estimate-price",
                     "/api/ai/extract-features",
-                    "/api/ai/analyze-product"
+                    "/api/ai/analyze-product",
+                    "/api/ai/create-product-from-image"
                 ).permitAll()
 
                 .anyRequest().authenticated()

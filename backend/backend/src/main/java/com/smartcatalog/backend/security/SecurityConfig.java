@@ -7,49 +7,20 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
-
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
             .csrf(csrf -> csrf.disable())
-
             .sessionManagement(session ->
-                session.sessionCreationPolicy(
-                    SessionCreationPolicy.STATELESS
-                )
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/users",
-                    "/api/users/**",
-                    "/api/artisans",
-                    "/api/artisans/**",
-                    "/api/ai/analyze-image",
-                    "/api/ai/speech-to-text",
-                    "/api/ai/estimate-price",
-                    "/api/ai/extract-features",
-                    "/api/ai/analyze-product",
-                    "/api/ai/create-product-from-image"
-                ).permitAll()
-
-                .anyRequest().authenticated()
-            )
-
-            .addFilterBefore(
-                jwtAuthenticationFilter,
-                UsernamePasswordAuthenticationFilter.class
+            .authorizeHttpRequests(auth ->
+                auth.anyRequest().permitAll()
             );
 
         return http.build();

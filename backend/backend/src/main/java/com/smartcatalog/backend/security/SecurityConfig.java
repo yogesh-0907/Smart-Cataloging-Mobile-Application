@@ -33,7 +33,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/api/users",
-                    "/api/users/login"
+                    "/api/users/login",
+                    "/api/ai/analyze-image"
                 ).permitAll()
 
                 .anyRequest().authenticated()

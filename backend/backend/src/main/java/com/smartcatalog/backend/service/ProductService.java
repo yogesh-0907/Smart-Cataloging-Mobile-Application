@@ -1,21 +1,49 @@
 package com.smartcatalog.backend.service;
 
+import com.smartcatalog.backend.ai.AIProductIntegrationService;
 import com.smartcatalog.backend.entity.Product;
 import com.smartcatalog.backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final AIProductIntegrationService aiProductIntegrationService;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(
+            ProductRepository productRepository,
+            AIProductIntegrationService aiProductIntegrationService) {
+
         this.productRepository = productRepository;
+        this.aiProductIntegrationService = aiProductIntegrationService;
     }
 
     public Product createProduct(Product product) {
+
+        Map<String, Object> aiResult =
+                aiProductIntegrationService.analyzeProduct(
+                        product.getProductName(),
+                        product.getMaterial(),
+                        product.getCategory(),
+                        product.getType(),
+                        product.getDescription()
+                );
+
+        Map<String, Object> analysis =
+                (Map<String, Object>) aiResult.get("analysis");
+
+        if (product.getDescription() == null ||
+                product.getDescription().isBlank()) {
+
+            product.setDescription(
+                    (String) analysis.get("aiDescription")
+            );
+        }
+
         return productRepository.save(product);
     }
 
@@ -28,7 +56,9 @@ public class ProductService {
     }
 
     public Product updateProduct(Long id, Product product) {
-        Product existingProduct = productRepository.findById(id).orElse(null);
+
+        Product existingProduct =
+                productRepository.findById(id).orElse(null);
 
         if (existingProduct == null) {
             return null;
@@ -45,6 +75,7 @@ public class ProductService {
     }
 
     public boolean deleteProduct(Long id) {
+
         if (!productRepository.existsById(id)) {
             return false;
         }
@@ -52,6 +83,7 @@ public class ProductService {
         productRepository.deleteById(id);
         return true;
     }
+
     public List<Product> searchByName(String name) {
         return productRepository.findByProductNameContainingIgnoreCase(name);
     }

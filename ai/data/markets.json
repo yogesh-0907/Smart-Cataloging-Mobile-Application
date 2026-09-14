@@ -1,0 +1,20 @@
+[
+    {
+        "name": "Eco Home Store",
+        "categories": ["Home Decor", "Bamboo/Cane"],
+        "materials": ["Bamboo", "Natural Fiber"],
+        "styles": ["Traditional", "Eco-friendly"]
+    },
+    {
+        "name": "Traditional Crafts Market",
+        "categories": ["Handicrafts", "Bamboo/Cane"],
+        "materials": ["Bamboo", "Wood"],
+        "styles": ["Traditional"]
+    },
+    {
+        "name": "Gift & Lifestyle Store",
+        "categories": ["Home Decor", "Handicrafts"],
+        "materials": ["Bamboo", "Wood", "Natural Fiber"],
+        "styles": ["Traditional", "Modern"]
+    }
+]

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Artisan AI Voice Assistant</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 700px;
+            margin: 60px auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        button {
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        #recordButton {
+            background: #d32f2f;
+            color: white;
+        }
+
+        #stopButton {
+            background: #333;
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .box {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            background: #f4f4f4;
+            text-align: left;
+        }
+
+        #status {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        #response {
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+
+
+<body>
+
+    <h1>🎤 Artisan AI Voice Assistant</h1>
+
+    <div class="subtitle">
+        Speak in your local language and receive an AI voice response.
+    </div>
+
+
+    <button id="recordButton">
+        🎤 Start Recording
+    </button>
+
+    <button id="stopButton" disabled>
+        🛑 Stop
+    </button>
+
+
+    <div id="status">
+        Ready
+    </div>
+
+
+    <div class="box">
+
+        <h3>🌐 Detected Language</h3>
+
+        <div id="language">
+            -
+        </div>
+
+    </div>
+
+
+    <div class="box">
+
+        <h3>📝 You Said</h3>
+
+        <div id="transcription">
+            -
+        </div>
+
+    </div>
+
+
+    <div class="box">
+
+        <h3>🤖 AI Response</h3>
+
+        <div id="response">
+            -
+        </div>
+
+    </div>
+
+
+    <div class="box">
+
+        <h3>🔊 Voice Response</h3>
+
+        <audio
+            id="audioPlayer"
+            controls>
+        </audio>
+
+    </div>
+
+
+<script>
+
+let mediaRecorder;
+
+let audioChunks = [];
+
+
+const recordButton =
+    document.getElementById("recordButton");
+
+const stopButton =
+    document.getElementById("stopButton");
+
+const status =
+    document.getElementById("status");
+
+const language =
+    document.getElementById("language");
+
+const transcription =
+    document.getElementById("transcription");
+
+const response =
+    document.getElementById("response");
+
+const audioPlayer =
+    document.getElementById("audioPlayer");
+
+
+// ======================================================
+// START RECORDING
+// ======================================================
+
+recordButton.addEventListener(
+    "click",
+    async () => {
+
+        try {
+
+            const stream =
+                await navigator.mediaDevices
+                    .getUserMedia({
+                        audio: true
+                    });
+
+
+            mediaRecorder =
+                new MediaRecorder(stream);
+
+
+            audioChunks = [];
+
+
+            mediaRecorder.ondataavailable =
+                event => {
+
+                    if (event.data.size > 0) {
+
+                        audioChunks.push(
+                            event.data
+                        );
+
+                    }
+
+                };
+
+
+            mediaRecorder.onstop =
+                sendAudioToServer;
+
+
+            mediaRecorder.start();
+
+
+            recordButton.disabled = true;
+
+            stopButton.disabled = false;
+
+
+            status.textContent =
+                "🔴 Listening... Speak now";
+
+
+        }
+
+        catch (error) {
+
+            console.error(error);
+
+            status.textContent =
+                "❌ Microphone permission denied.";
+
+        }
+
+    }
+);
+
+
+// ======================================================
+// STOP RECORDING
+// ======================================================
+
+stopButton.addEventListener(
+    "click",
+    () => {
+
+        if (mediaRecorder) {
+
+            mediaRecorder.stop();
+
+            mediaRecorder.stream
+                .getTracks()
+                .forEach(
+                    track => track.stop()
+                );
+
+        }
+
+
+        recordButton.disabled = false;
+
+        stopButton.disabled = true;
+
+
+        status.textContent =
+            "⏳ Processing your voice...";
+
+    }
+);
+
+
+// ======================================================
+// SEND AUDIO TO FASTAPI
+// ======================================================
+
+async function sendAudioToServer() {
+
+    try {
+
+        const audioBlob =
+            new Blob(
+                audioChunks,
+                {
+                    type: "audio/webm"
+                }
+            );
+
+
+        const formData =
+            new FormData();
+
+
+        formData.append(
+            "audio",
+            audioBlob,
+            "artisan_voice.webm"
+        );
+
+
+        const serverResponse =
+            await fetch(
+                "/api/voice-assistant",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
+
+
+        if (!serverResponse.ok) {
+
+            throw new Error(
+                "Server returned " +
+                serverResponse.status
+            );
+
+        }
+
+
+        const result =
+            await serverResponse.json();
+
+
+        console.log(
+            "Voice assistant result:",
+            result
+        );
+
+
+        // Language
+
+        language.textContent =
+            result.language +
+            " (" +
+            result.language_code +
+            ")";
+
+
+        // Transcription
+
+        transcription.textContent =
+            result.transcription;
+
+
+        // AI response
+
+        response.textContent =
+            result.ai_response;
+
+
+        // Audio response
+
+        const audioURL =
+            result.audio_url +
+            "?t=" +
+            Date.now();
+
+
+        audioPlayer.src =
+            audioURL;
+
+
+        audioPlayer.load();
+
+
+        status.textContent =
+            "✅ Response ready";
+
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+            "❌ Voice assistant error: " +
+            error.message;
+
+    }
+
+}
+
+</script>
+
+</body>
+
+</html>

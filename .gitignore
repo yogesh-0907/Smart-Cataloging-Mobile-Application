@@ -1,0 +1,9 @@
+target/
+*.class
+.idea/
+.vscode/
+.venv/
+__pycache__/
+*.pyc
+.env
+backend/backend.zip

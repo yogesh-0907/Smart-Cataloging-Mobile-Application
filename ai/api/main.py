@@ -50,7 +50,45 @@ app = FastAPI(
     version="1.0.0"
 )
 
+import base64
+from pydantic import BaseModel
 
+class VoiceJSONRequest(BaseModel):
+    filename: str
+    content_type: str
+    audio_base64: str
+
+
+@app.post("/api/transcribe-voice-json")
+async def transcribe_voice_json(request: VoiceJSONRequest):
+
+    audio_bytes = base64.b64decode(request.audio_base64)
+
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="Audio data is empty.")
+
+    suffix = os.path.splitext(request.filename)[1] or ".mp3"
+    temp_path = None
+
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+            temp_file.write(audio_bytes)
+            temp_path = temp_file.name
+
+        result = transcribe_voice(temp_path)
+
+        return {
+            "filename": request.filename,
+            "content_type": request.content_type,
+            **result
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.unlink(temp_path)
 # =========================================================
 # WEB FRONTEND
 # =========================================================
@@ -1091,3 +1129,51 @@ async def voice_catalog_endpoint(
             except Exception:
 
                 pass
+
+from fastapi import Request
+
+@app.post("/api/transcribe-voice-raw")
+async def transcribe_voice_raw(request: Request):
+
+    audio_bytes = await request.body()
+
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="Audio data is empty.")
+
+    filename = request.headers.get("x-filename", "audio.mp3")
+
+    content_type = request.headers.get(
+        "content-type",
+        "audio/mpeg"
+    )
+
+    suffix = os.path.splitext(filename)[1] or ".mp3"
+
+    temp_path = None
+
+    try:
+        with tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=suffix
+        ) as temp_file:
+
+            temp_file.write(audio_bytes)
+            temp_path = temp_file.name
+
+        result = transcribe_voice(temp_path)
+
+        return {
+            "filename": filename,
+            "content_type": content_type,
+            **result
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.unlink(temp_path)

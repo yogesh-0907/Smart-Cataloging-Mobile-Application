@@ -1,7 +1,6 @@
 package com.smartcatalog.backend.controller;
 
 import com.smartcatalog.backend.ai.ImageProductCreationService;
-import com.smartcatalog.backend.entity.Product;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,13 +18,13 @@ public class ImageProductCreationController {
     }
 
     @PostMapping("/create-product-from-image")
-    public ResponseEntity<Product> createProductFromImage(
+    public ResponseEntity<?> createProductFromImage(
             @RequestParam("image") MultipartFile image,
             @RequestParam Long artisanId,
             @RequestParam String productName,
             @RequestParam Double price) {
 
-        Product product =
+        ImageProductCreationService.ProductCreationResult result =
                 imageProductCreationService.createProductFromImage(
                         image,
                         artisanId,
@@ -33,10 +32,10 @@ public class ImageProductCreationController {
                         price
                 );
 
-        if (product == null) {
+        if (result == null) {
             return ResponseEntity.notFound().build();
         }
 
-        return ResponseEntity.ok(product);
+        return ResponseEntity.ok(result);
     }
 }

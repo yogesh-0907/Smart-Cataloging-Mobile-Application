@@ -27,4 +27,13 @@ public class SpeechToTextController {
                 speechToTextService.convertSpeech(audio)
         );
     }
+
+    @PostMapping("/voice-catalog")
+    public ResponseEntity<Map<String, Object>> voiceCatalog(
+            @RequestParam("audio") MultipartFile audio) {
+
+        return ResponseEntity.ok(
+                speechToTextService.createVoiceCatalog(audio)
+        );
+    }
 }

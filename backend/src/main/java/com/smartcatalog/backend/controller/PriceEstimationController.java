@@ -22,13 +22,25 @@ public class PriceEstimationController {
     public ResponseEntity<Map<String, Object>> estimatePrice(
             @RequestParam String material,
             @RequestParam String category,
-            @RequestParam String type) {
+            @RequestParam String type,
+            @RequestParam(defaultValue = "0") double materialCost,
+            @RequestParam(defaultValue = "0") double laborHours,
+            @RequestParam(defaultValue = "0") double laborRate,
+            @RequestParam(defaultValue = "0") double packagingCost,
+            @RequestParam(defaultValue = "10") double overheadPercent,
+            @RequestParam(defaultValue = "20") double profitMarginPercent) {
 
         return ResponseEntity.ok(
                 priceEstimationService.estimatePrice(
                         material,
                         category,
-                        type
+                        type,
+                        materialCost,
+                        laborHours,
+                        laborRate,
+                        packagingCost,
+                        overheadPercent,
+                        profitMarginPercent
                 )
         );
     }

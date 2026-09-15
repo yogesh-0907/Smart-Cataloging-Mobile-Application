@@ -4,6 +4,7 @@ from typing import Dict, Any
 
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 
 load_dotenv(".env")
@@ -14,7 +15,10 @@ client = None
 
 if GEMINI_API_KEY:
     client = genai.Client(
-        api_key=GEMINI_API_KEY
+        api_key=GEMINI_API_KEY,
+        http_options=types.HttpOptions(
+            client_args={"trust_env": False}
+        )
     )
 
 

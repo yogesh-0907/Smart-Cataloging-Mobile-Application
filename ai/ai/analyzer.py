@@ -10,11 +10,14 @@ from google.genai import errors
 load_dotenv()
 
 client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
+    api_key=os.getenv("GEMINI_API_KEY"),
+    http_options=types.HttpOptions(
+        client_args={"trust_env": False}
+    )
 )
 
 MODELS = [
-    "gemini-3.6-flash",
+    "gemini-3.5-flash",
     "gemini-3.5-flash",
     "gemini-3.7-flash"
 ]
@@ -70,13 +73,10 @@ Rules:
                         mime_type=content_type
                     )
                 ],
-               config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    thinking_config=types.ThinkingConfig(
-                    thinking_level="minimal"
-    )
-)
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json"
                 )
+            )
 
             result = response.text.strip()
 

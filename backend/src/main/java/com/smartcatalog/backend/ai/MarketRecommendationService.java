@@ -1,18 +1,25 @@
 package com.smartcatalog.backend.ai;
 
-import com.smartcatalog.backend.entity.Market;
-import com.smartcatalog.backend.repository.MarketRepository;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class MarketRecommendationService {
 
-    private final MarketRepository marketRepository;
+    private final RestClient restClient;
 
-    public MarketRecommendationService(MarketRepository marketRepository) {
-        this.marketRepository = marketRepository;
+    @Value("${python.ai.base-url:http://127.0.0.1:8000}")
+    private String pythonAiBaseUrl;
+
+    public MarketRecommendationService(RestClient.Builder restClientBuilder) {
+        this.restClient = restClientBuilder.build();
     }
 
     public List<Map<String, Object>> recommendMarkets(
@@ -20,55 +27,21 @@ public class MarketRecommendationService {
             String category,
             String type) {
 
-        List<Market> markets = marketRepository.findAll();
-        List<Map<String, Object>> recommendations = new ArrayList<>();
+        try {
+            String url = UriComponentsBuilder.fromUriString(pythonAiBaseUrl)
+                    .path("/api/recommend-markets")
+                    .queryParam("material", material == null ? "" : material)
+                    .queryParam("category", category == null ? "" : category)
+                    .queryParam("product_type", type == null ? "" : type)
+                    .toUriString();
 
-        for (Market market : markets) {
-
-            double score = 50.0;
-
-            if (market.getType() != null) {
-                if (market.getType().equalsIgnoreCase("RETAILER")) {
-                    score += 20;
-                } else if (market.getType().equalsIgnoreCase("WHOLESALER")) {
-                    score += 15;
-                }
-            }
-
-            if (category != null && !category.isBlank()) {
-                score += 10;
-            }
-
-            if (material != null && !material.isBlank()) {
-                score += 10;
-            }
-
-            if (type != null && !type.isBlank()) {
-                score += 10;
-            }
-
-            if (score > 100) {
-                score = 100;
-            }
-
-            Map<String, Object> result = new HashMap<>();
-
-            result.put("marketId", market.getMarketId());
-            result.put("marketName", market.getName());
-            result.put("location", market.getLocation());
-            result.put("type", market.getType());
-            result.put("matchScore", score);
-
-            recommendations.add(result);
+            return restClient.post()
+                    .uri(url)
+                    .retrieve()
+                    .body(List.class);
+        } catch (RestClientException e) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY, "Python AI market service is unavailable.", e);
         }
-
-        recommendations.sort(
-                (a, b) -> Double.compare(
-                        (Double) b.get("matchScore"),
-                        (Double) a.get("matchScore")
-                )
-        );
-
-        return recommendations;
     }
 }

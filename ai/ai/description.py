@@ -9,7 +9,10 @@ from google.genai import types
 load_dotenv(".env")
 
 client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
+    api_key=os.getenv("GEMINI_API_KEY"),
+    http_options=types.HttpOptions(
+        client_args={"trust_env": False}
+    )
 )
 
 DESCRIPTION_MODELS = [

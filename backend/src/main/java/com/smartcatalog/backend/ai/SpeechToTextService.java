@@ -3,69 +3,110 @@ package com.smartcatalog.backend.ai;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.HashMap;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class SpeechToTextService {
 
-    private final RestClient restClient;
+    private final ObjectMapper objectMapper;
 
     @Value("${python.ai.base-url:http://127.0.0.1:8000}")
     private String pythonAiBaseUrl;
 
-    public SpeechToTextService(RestClient.Builder restClientBuilder) {
-        this.restClient = restClientBuilder.build();
+    public SpeechToTextService(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
     public Map<String, Object> convertSpeech(MultipartFile audio) {
+        return forwardAudio(audio, "/api/transcribe-voice");
+    }
+
+    public Map<String, Object> createVoiceCatalog(MultipartFile audio) {
+        return forwardAudio(audio, "/api/voice-catalog");
+    }
+
+    private Map<String, Object> forwardAudio(MultipartFile audio, String pythonEndpoint) {
 
         if (audio == null || audio.isEmpty()) {
             throw new IllegalArgumentException("Audio file is required.");
         }
 
         try {
-            String filename = audio.getOriginalFilename() != null
-                    ? audio.getOriginalFilename()
-                    : "audio.mp3";
-
-            String contentType = audio.getContentType() != null
-                    ? audio.getContentType()
-                    : "application/octet-stream";
-
-            byte[] audioBytes = audio.getBytes();
-
-            if (audioBytes.length == 0) {
-                throw new IllegalArgumentException("Audio file contains no data.");
+            String originalFilename = audio.getOriginalFilename();
+            if (originalFilename == null || originalFilename.isBlank()) {
+                originalFilename = "audio";
             }
 
-            String audioBase64 =
-                    Base64.getEncoder().encodeToString(audioBytes);
+            MediaType audioContentType;
+            try {
+                audioContentType = audio.getContentType() == null
+                        ? MediaType.APPLICATION_OCTET_STREAM
+                        : MediaType.parseMediaType(audio.getContentType());
+            } catch (IllegalArgumentException e) {
+                audioContentType = MediaType.APPLICATION_OCTET_STREAM;
+            }
 
-            Map<String, Object> request = new HashMap<>();
-            request.put("filename", filename);
-            request.put("content_type", contentType);
-            request.put("audio_base64", audioBase64);
+            String boundary = "----SmartCatalog" + UUID.randomUUID();
+            byte[] requestBody = createMultipartBody(
+                    boundary, "audio", originalFilename, audioContentType, audio.getBytes());
 
-            return restClient
-                    .post()
-                    .uri(pythonAiBaseUrl + "/api/transcribe-voice-json")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(request)
-                    .retrieve()
-                    .body(Map.class);
+            HttpURLConnection connection = (HttpURLConnection) new URL(
+                    pythonAiBaseUrl + pythonEndpoint).openConnection();
+            connection.setDoOutput(true);
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type",
+                    "multipart/form-data; boundary=" + boundary);
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setFixedLengthStreamingMode(requestBody.length);
+
+            try (OutputStream output = connection.getOutputStream()) {
+                output.write(requestBody);
+            }
+
+            int statusCode = connection.getResponseCode();
+            InputStream responseStream = statusCode >= 400
+                    ? connection.getErrorStream() : connection.getInputStream();
+            String response = responseStream == null ? "" : new String(
+                    responseStream.readAllBytes(), StandardCharsets.UTF_8);
+
+            if (statusCode >= 400) {
+                throw new IOException("Python AI returned HTTP " + statusCode + ": " + response);
+            }
+
+            return objectMapper.readValue(response, Map.class);
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read audio file.", e);
-        } catch (RestClientException e) {
-            throw new RuntimeException(
-                    "Python AI speech service failed: " + e.getMessage(), e);
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_GATEWAY,
+                    "Unable to read uploaded audio file.", e);
         }
+    }
+
+    private byte[] createMultipartBody(
+            String boundary,
+            String fieldName,
+            String filename,
+            MediaType contentType,
+            byte[] fileBytes) throws IOException {
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        output.write(("--" + boundary + "\r\n").getBytes(StandardCharsets.UTF_8));
+        output.write(("Content-Disposition: form-data; name=\"" + fieldName
+                + "\"; filename=\"" + filename + "\"\r\n").getBytes(StandardCharsets.UTF_8));
+        output.write(("Content-Type: " + contentType + "\r\n\r\n")
+                .getBytes(StandardCharsets.UTF_8));
+        output.write(fileBytes);
+        output.write(("\r\n--" + boundary + "--\r\n").getBytes(StandardCharsets.UTF_8));
+        return output.toByteArray();
     }
 }

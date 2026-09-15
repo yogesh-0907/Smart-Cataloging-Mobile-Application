@@ -4,8 +4,15 @@ from fastapi.staticfiles import StaticFiles
 
 import traceback
 import os
+import sys
 import tempfile
 from pathlib import Path
+
+
+# Gemini transcription can contain Indian-language Unicode.  Configure the
+# Windows console stream before diagnostic output is emitted.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 # =========================================================
 # AI IMPORTS
@@ -19,7 +26,8 @@ from ai.voice import (
     transcribe_voice,
     voice_assistant,
     detect_language,
-    voice_catalog
+    voice_catalog,
+    VOICE_ASSISTANT_AUDIO_PATH
 )
 
 from ai.image_enhancer import enhance_product_image
@@ -562,6 +570,23 @@ async def recommend_product_price(
         )
 
 
+@app.post("/api/recommend-markets")
+async def recommend_product_markets(
+    category: str,
+    material: str = "",
+    product_type: str = "",
+    style: str = "Traditional"
+):
+    product = {
+        "category": category,
+        "material": [item.strip() for item in material.split(",") if item.strip()],
+        "product_type": product_type,
+        "style": style
+    }
+
+    return recommend_markets(product)
+
+
 # =========================================================
 # VOICE TRANSCRIPTION ONLY
 # =========================================================
@@ -857,9 +882,7 @@ async def voice_assistant_endpoint(
 )
 async def get_voice_assistant_audio():
 
-    audio_path = (
-        "/tmp/voice_assistant_response.wav"
-    )
+    audio_path = VOICE_ASSISTANT_AUDIO_PATH
 
     if not os.path.exists(
         audio_path

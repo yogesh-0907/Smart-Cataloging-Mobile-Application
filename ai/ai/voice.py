@@ -4,6 +4,7 @@ import json
 import base64
 import wave
 import mimetypes
+import tempfile
 
 from dotenv import load_dotenv
 from google import genai
@@ -29,7 +30,10 @@ if not GEMINI_API_KEY:
 # =========================================================
 
 client = genai.Client(
-    api_key=GEMINI_API_KEY
+    api_key=GEMINI_API_KEY,
+    http_options=types.HttpOptions(
+        client_args={"trust_env": False}
+    )
 )
 
 
@@ -52,6 +56,11 @@ CATALOG_MODEL = os.getenv(
 TTS_MODEL = os.getenv(
     "GEMINI_TTS_MODEL",
     "gemini-3.1-flash-tts-preview"
+)
+
+VOICE_ASSISTANT_AUDIO_PATH = os.path.join(
+    tempfile.gettempdir(),
+    "voice_assistant_response.wav"
 )
 
 
@@ -655,7 +664,7 @@ def save_wave_file(
 
 def generate_speech(
     text: str,
-    output_path: str = "/tmp/voice_assistant_response.wav"
+    output_path: str = VOICE_ASSISTANT_AUDIO_PATH
 ):
     """
     Convert AI response text into speech.
